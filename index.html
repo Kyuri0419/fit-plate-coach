@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fit Plate Coach</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="앱 내비게이션">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">FP</span>
+          <div>
+            <strong>Fit Plate</strong>
+            <span>Coach</span>
+          </div>
+        </div>
+
+        <nav class="nav-tabs" aria-label="주요 화면">
+          <button class="nav-tab is-active" type="button" data-view="dashboard" aria-pressed="true"><span aria-hidden="true">▦</span>대시보드</button>
+          <button class="nav-tab" type="button" data-view="members" aria-pressed="false"><span aria-hidden="true">◉</span>회원</button>
+          <button class="nav-tab" type="button" data-view="meal" aria-pressed="false"><span aria-hidden="true">＋</span>식단 기록</button>
+          <button class="nav-tab" type="button" data-view="plans" aria-pressed="false"><span aria-hidden="true">▤</span>식단 플랜</button>
+        </nav>
+
+        <div class="storage-note">
+          <strong id="storageMode">로컬 MVP</strong>
+          <span id="storageText">Supabase 설정 전에는 이 브라우저에만 저장됩니다.</span>
+        </div>
+      </aside>
+
+      <main class="main">
+        <section class="auth-panel" id="authPanel" hidden>
+          <div>
+            <p class="eyebrow">클라우드 공유 모드</p>
+            <h1>트레이너 로그인</h1>
+            <p class="muted">Supabase 연결 후에는 로그인한 트레이너의 회원/식단 데이터가 클라우드에 저장됩니다.</p>
+          </div>
+          <form id="authForm" class="auth-form">
+            <label>이메일 <input required name="email" type="email" autocomplete="email" placeholder="trainer@example.com" /></label>
+            <label>비밀번호 <input required name="password" type="password" autocomplete="current-password" minlength="6" /></label>
+            <div class="auth-actions">
+              <button class="primary-action" type="submit" data-auth-action="signin">로그인</button>
+              <button class="ghost-action" type="submit" data-auth-action="signup">계정 만들기</button>
+            </div>
+            <p class="muted" id="authMessage"></p>
+          </form>
+        </section>
+
+        <section class="auth-panel" id="memberPortal" hidden>
+          <div>
+            <p class="eyebrow">회원 식단 업로드</p>
+            <h1 id="portalMemberName">식단 기록</h1>
+            <p class="muted">트레이너에게 오늘 식단과 사진을 보냅니다.</p>
+          </div>
+          <form id="portalMealForm" class="auth-form">
+            <div class="field-row">
+              <label>날짜 <input required name="date" type="date" /></label>
+              <label>
+                끼니
+                <select name="mealType">
+                  <option>아침</option>
+                  <option>점심</option>
+                  <option>저녁</option>
+                  <option>간식</option>
+                </select>
+              </label>
+            </div>
+            <label>식단 메모 <textarea required name="description" rows="4" placeholder="예: 현미밥, 닭가슴살, 샐러드"></textarea></label>
+            <div class="field-row">
+              <label>물 섭취 <input name="water" type="number" min="0" max="5" step="0.1" placeholder="L" /></label>
+              <label>사진 <input name="photo" type="file" accept="image/*" /></label>
+            </div>
+            <div class="check-row">
+              <label><input name="diningOut" type="checkbox" /> 외식</label>
+              <label><input name="alcohol" type="checkbox" /> 음주</label>
+            </div>
+            <button class="primary-action full" type="submit">트레이너에게 보내기</button>
+            <p class="muted" id="portalMessage"></p>
+          </form>
+        </section>
+
+        <div id="appContent">
+          <header class="topbar">
+            <div>
+              <p class="eyebrow">트레이너 식단 관리</p>
+              <h1 id="viewTitle">오늘의 관리</h1>
+            </div>
+            <div class="top-actions">
+              <button class="icon-button" type="button" id="seedButton" aria-label="샘플 데이터 채우기" title="샘플 데이터 채우기">◎</button>
+              <button class="ghost-action" type="button" id="signOutButton" hidden>로그아웃</button>
+              <button class="primary-action" type="button" data-view-jump="meal">식단 추가</button>
+            </div>
+          </header>
+
+          <section class="view is-active" id="dashboardView" aria-labelledby="viewTitle">
+            <div class="metric-grid" id="metricGrid"></div>
+            <div class="work-grid">
+              <section class="panel">
+                <div class="panel-header">
+                  <h2>피드백 대기</h2>
+                  <span id="pendingCount" class="count-badge">0</span>
+                </div>
+                <div class="feed-list" id="pendingMeals"></div>
+              </section>
+              <section class="panel">
+                <div class="panel-header">
+                  <h2>회원 상태</h2>
+                  <button class="ghost-action" type="button" data-view-jump="members">회원 추가</button>
+                </div>
+                <div class="member-status-list" id="memberStatusList"></div>
+              </section>
+            </div>
+          </section>
+
+          <section class="view" id="membersView" aria-labelledby="viewTitle">
+            <div class="split-layout">
+              <form class="panel form-panel" id="memberForm">
+                <div class="panel-header"><h2>회원 등록</h2></div>
+                <label>이름 <input required name="name" autocomplete="off" placeholder="예: 김서윤" /></label>
+                <label>
+                  목표
+                  <select name="goal">
+                    <option>감량</option>
+                    <option>증량</option>
+                    <option>유지</option>
+                    <option>컨디션 개선</option>
+                  </select>
+                </label>
+                <div class="field-row">
+                  <label>현재 체중 <input name="weight" type="number" min="30" max="220" step="0.1" placeholder="kg" /></label>
+                  <label>목표 체중 <input name="targetWeight" type="number" min="30" max="220" step="0.1" placeholder="kg" /></label>
+                </div>
+                <label>특이사항 <textarea name="notes" rows="4" placeholder="알레르기, 선호 음식, 생활 패턴"></textarea></label>
+                <button class="primary-action full" type="submit">회원 저장</button>
+              </form>
+              <section class="panel">
+                <div class="panel-header">
+                  <h2>회원 목록</h2>
+                  <span id="memberCount" class="count-badge">0</span>
+                </div>
+                <div class="member-list" id="memberList"></div>
+              </section>
+            </div>
+          </section>
+
+          <section class="view" id="mealView" aria-labelledby="viewTitle">
+            <div class="split-layout">
+              <form class="panel form-panel" id="mealForm">
+                <div class="panel-header"><h2>식단 입력</h2></div>
+                <label>회원 <select required name="memberId" id="mealMemberSelect"></select></label>
+                <div class="field-row">
+                  <label>날짜 <input required name="date" type="date" /></label>
+                  <label>
+                    끼니
+                    <select name="mealType">
+                      <option>아침</option>
+                      <option>점심</option>
+                      <option>저녁</option>
+                      <option>간식</option>
+                    </select>
+                  </label>
+                </div>
+                <label>식단 메모 <textarea required name="description" rows="4" placeholder="예: 현미밥, 닭가슴살, 채소, 아메리카노"></textarea></label>
+                <div class="field-row">
+                  <label>물 섭취 <input name="water" type="number" min="0" max="5" step="0.1" placeholder="L" /></label>
+                  <label>사진 <input name="photo" type="file" accept="image/*" /></label>
+                </div>
+                <div class="check-row">
+                  <label><input name="diningOut" type="checkbox" /> 외식</label>
+                  <label><input name="alcohol" type="checkbox" /> 음주</label>
+                </div>
+                <button class="primary-action full" type="submit">식단 저장</button>
+              </form>
+              <section class="panel">
+                <div class="panel-header">
+                  <h2>최근 식단</h2>
+                  <span id="mealCount" class="count-badge">0</span>
+                </div>
+                <div class="meal-feed" id="mealFeed"></div>
+              </section>
+            </div>
+          </section>
+
+          <section class="view" id="plansView" aria-labelledby="viewTitle">
+            <div class="plan-toolbar">
+              <button class="chip is-active" type="button" data-plan-filter="전체">전체</button>
+              <button class="chip" type="button" data-plan-filter="감량">감량</button>
+              <button class="chip" type="button" data-plan-filter="증량">증량</button>
+              <button class="chip" type="button" data-plan-filter="유지">유지</button>
+            </div>
+            <div class="plan-grid" id="planGrid"></div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <dialog id="feedbackDialog">
+      <form id="feedbackForm">
+        <div class="dialog-header">
+          <h2>피드백 작성</h2>
+          <button class="icon-button" type="button" id="closeFeedback" aria-label="닫기">×</button>
+        </div>
+        <input type="hidden" name="mealId" />
+        <div class="tag-row" role="group" aria-label="빠른 태그">
+          <button type="button" class="chip" data-feedback-tag="좋아요">좋아요</button>
+          <button type="button" class="chip" data-feedback-tag="단백질 보강">단백질 보강</button>
+          <button type="button" class="chip" data-feedback-tag="야식 주의">야식 주의</button>
+          <button type="button" class="chip" data-feedback-tag="수분 좋아요">수분 좋아요</button>
+        </div>
+        <label>코멘트 <textarea required name="comment" rows="5" placeholder="회원에게 보낼 피드백"></textarea></label>
+        <button class="primary-action full" type="submit">저장</button>
+      </form>
+    </dialog>
+
+    <script src="./supabase-config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
