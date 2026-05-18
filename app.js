@@ -61,6 +61,10 @@ const nodes = {
   closeAiResult: document.querySelector("#closeAiResult"),
   copyKakaoBtn: document.querySelector("#copyKakaoBtn"),
   toast: document.querySelector("#toast"),
+  deleteDialog: document.querySelector("#deleteDialog"),
+  deleteDialogMsg: document.querySelector("#deleteDialogMsg"),
+  deleteConfirmBtn: document.querySelector("#deleteConfirmBtn"),
+  deleteCancelBtn: document.querySelector("#deleteCancelBtn"),
 };
 
 document.querySelectorAll("[data-view]").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
@@ -384,8 +388,31 @@ function renderMembers() {
   nodes.memberList.innerHTML = state.members.map((member) => {
     const weightText = member.weight && member.targetWeight ? `${member.weight}kg → ${member.targetWeight}kg` : "체중 정보 없음";
     const shareLink = cloudEnabled && member.shareToken ? `${location.origin}${location.pathname}?member=${member.shareToken}` : "";
-    return `<article class="member-row"><div class="member-main"><strong>${escapeHtml(member.name)}</strong><span class="status-pill">${member.goal}</span></div><span class="muted">${weightText}</span><p class="muted">${escapeHtml(member.notes || "특이사항 없음")}</p>${shareLink ? `<label>회원 업로드 링크 <input readonly value="${shareLink}" /></label>` : ""}</article>`;
+    const mealCount = state.meals.filter((m) => m.memberId === member.id).length;
+    return `<article class="member-row">
+      <div class="member-main">
+        <div class="member-name-group"><strong>${escapeHtml(member.name)}</strong><span class="status-pill">${member.goal}</span></div>
+        <button class="delete-btn" type="button" data-delete-member="${member.id}" data-member-name="${escapeHtml(member.name)}" data-meal-count="${mealCount}" aria-label="${escapeHtml(member.name)} 삭제">🗑</button>
+      </div>
+      <span class="muted">${weightText}</span>
+      <p class="muted">${escapeHtml(member.notes || "특이사항 없음")}</p>
+      ${shareLink ? `<label>회원 업로드 링크 <input readonly value="${shareLink}" /></label>` : ""}
+    </article>`;
   }).join("");
+
+  nodes.memberList.querySelectorAll("[data-delete-member]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const { deleteMember: id, memberName: name, mealCount: cnt } = btn.dataset;
+      const confirmed = await showConfirm(
+        `<strong>${name}</strong>님을 삭제할까요?<br><br>` +
+        `⚠️ 이 회원의 식단 기록 <strong>${cnt}개</strong>도 함께 삭제됩니다.<br>` +
+        `<small style="color:#6b7280">이 작업은 되돌릴 수 없어요.</small>`
+      );
+      if (!confirmed) return;
+      btn.disabled = true;
+      await deleteMember(id);
+    });
+  });
 }
 
 function renderMealSelect() {
@@ -407,8 +434,29 @@ function renderMealFeed() {
   nodes.mealFeed.innerHTML = state.meals.slice(0, 12).map((meal) => {
     const member = getMember(meal.memberId);
     const photo = meal.photo ? `<img class="meal-thumb" src="${meal.photo}" alt="${escapeHtml(member.name)} ${meal.mealType} 식단 사진" />` : `<div class="meal-thumb meal-placeholder" aria-hidden="true">사진 없음</div>`;
-    return `<article class="meal-item">${photo}<div><div class="item-title"><strong>${escapeHtml(member.name)}</strong><span class="status-pill">${meal.mealType}</span></div><p class="muted">${formatDate(meal.date)} · 물 ${meal.water || 0}L</p><p>${escapeHtml(meal.description)}</p>${meal.feedback ? `<div class="feedback-box">${escapeHtml(meal.feedback)}</div>` : ""}</div></article>`;
+    return `<article class="meal-item">
+      ${photo}
+      <div>
+        <div class="item-title">
+          <strong>${escapeHtml(member.name)}</strong>
+          <span class="status-pill">${meal.mealType}</span>
+          <button class="delete-btn" type="button" data-delete-meal="${meal.id}" aria-label="식단 삭제" style="margin-left:auto">🗑</button>
+        </div>
+        <p class="muted">${formatDate(meal.date)} · 물 ${meal.water || 0}L</p>
+        <p>${escapeHtml(meal.description)}</p>
+        ${meal.feedback ? `<div class="feedback-box">${escapeHtml(meal.feedback)}</div>` : ""}
+      </div>
+    </article>`;
   }).join("");
+
+  nodes.mealFeed.querySelectorAll("[data-delete-meal]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const confirmed = await showConfirm("이 식단 기록을 삭제할까요?");
+      if (!confirmed) return;
+      btn.disabled = true;
+      await deleteMeal(btn.dataset.deleteMeal);
+    });
+  });
 }
 
 function renderPlans() {
@@ -430,6 +478,46 @@ async function persistMeal(meal) {
     return;
   }
   await db.from("meals").upsert(toMealRow(meal));
+}
+
+async function deleteMember(id) {
+  if (cloudEnabled && currentUser) {
+    const { error } = await db.from("members").delete().eq("id", id);
+    if (error) { showToast("삭제 실패: " + error.message); return; }
+  }
+  state.members = state.members.filter((m) => m.id !== id);
+  state.meals   = state.meals.filter((m) => m.memberId !== id);
+  saveLocalState();
+  render();
+  showToast("삭제됐어요");
+}
+
+async function deleteMeal(id) {
+  if (cloudEnabled && currentUser) {
+    const { error } = await db.from("meals").delete().eq("id", id);
+    if (error) { showToast("삭제 실패: " + error.message); return; }
+  }
+  state.meals = state.meals.filter((m) => m.id !== id);
+  saveLocalState();
+  render();
+  showToast("삭제됐어요");
+}
+
+function showConfirm(message) {
+  return new Promise((resolve) => {
+    nodes.deleteDialogMsg.innerHTML = message;
+    nodes.deleteDialog.showModal();
+    const finish = (result) => {
+      nodes.deleteDialog.close();
+      nodes.deleteConfirmBtn.removeEventListener("click", onConfirm);
+      nodes.deleteCancelBtn.removeEventListener("click", onCancel);
+      resolve(result);
+    };
+    const onConfirm = () => finish(true);
+    const onCancel  = () => finish(false);
+    nodes.deleteConfirmBtn.addEventListener("click", onConfirm, { once: true });
+    nodes.deleteCancelBtn.addEventListener("click",  onCancel,  { once: true });
+  });
 }
 
 async function saveAll() {

@@ -793,6 +793,76 @@ dialog::backdrop {
   white-space: pre-wrap;
 }
 
+/* ── Delete button ───────────────────────── */
+.member-name-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--subtle);
+  font-size: 0.9rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.delete-btn:hover  { background: #fee2e2; color: #ef4444; }
+.delete-btn:active { background: #fecaca; }
+.delete-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Delete confirm dialog ───────────────── */
+#deleteDialog {
+  width: min(400px, calc(100vw - 32px));
+  border: 0;
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.06);
+  margin: auto;
+}
+
+#deleteDialog::backdrop {
+  background: rgba(17,24,39,0.45);
+  backdrop-filter: blur(4px);
+}
+
+#deleteDialogMsg {
+  margin: 0 0 20px;
+  line-height: 1.75;
+  font-size: 0.95rem;
+}
+
+.delete-dialog-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.danger-action {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: var(--radius);
+  border: none;
+  background: #ef4444;
+  color: white;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.danger-action:hover  { background: #dc2626; transform: translateY(-1px); }
+.danger-action:active { background: #b91c1c; transform: translateY(0); }
+
 /* ── KakaoTalk preview & copy ───────────── */
 .kakao-preview {
   padding: 14px 16px;
