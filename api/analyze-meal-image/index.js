@@ -118,7 +118,7 @@ kakaoMessage 작성 규칙:
             ]
           }
         ],
-        max_tokens: 800,
+        max_tokens: 1200,
         temperature: 0.5,
         response_format: { type: 'json_object' }
       })

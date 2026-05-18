@@ -44,8 +44,8 @@ async function analyzeMealImage(imageFile, memberInfo = null) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'AI 이미지 분석 실패');
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || error.detail || 'AI 이미지 분석 실패');
   }
 
   return response.json();
@@ -57,22 +57,27 @@ function fileToBase64(file) {
     reader.onload = () => {
       const img = new Image();
       img.onload = () => {
-        const MAX = 768;
-        let { width, height } = img;
-        if (width > MAX || height > MAX) {
-          if (width > height) { height = Math.round(height * MAX / width); width = MAX; }
-          else { width = Math.round(width * MAX / height); height = MAX; }
+        try {
+          const MAX = 768;
+          let { width, height } = img;
+          if (width > MAX || height > MAX) {
+            if (width > height) { height = Math.round(height * MAX / width); width = MAX; }
+            else { width = Math.round(width * MAX / height); height = MAX; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.82));
+        } catch {
+          // 캔버스 변환 실패 시 원본 data URL 그대로 사용
+          resolve(reader.result);
         }
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', 0.82));
       };
-      img.onerror = reject;
+      img.onerror = () => reject(new Error('이미지를 읽을 수 없어요. 다른 사진을 선택해주세요.'));
       img.src = reader.result;
     };
-    reader.onerror = reject;
+    reader.onerror = () => reject(new Error('파일을 읽는 중 오류가 발생했어요.'));
     reader.readAsDataURL(file);
   });
 }
