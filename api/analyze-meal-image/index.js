@@ -94,13 +94,13 @@ module.exports = async function (context, req) {
                 type: 'image_url',
                 image_url: {
                   url: `data:${mediaType};base64,${imageData}`,
-                  detail: 'high'
+                  detail: 'low'
                 }
               }
             ]
           }
         ],
-        max_tokens: 1500,
+        max_tokens: 800,
         temperature: 0.5,
         response_format: { type: 'json_object' }
       })
