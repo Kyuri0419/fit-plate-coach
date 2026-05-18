@@ -705,6 +705,8 @@ async function handleImageAnalysis() {
   try {
     const result = await window.FitPlateAI.analyzeMealImage(file, memberInfo);
     showAiResult(result);
+    const input = document.querySelector("#mealPhotoInput");
+    if (input) input.value = "";
   } catch (error) {
     showAiError(error.message);
   } finally {
