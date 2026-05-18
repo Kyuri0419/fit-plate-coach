@@ -49,6 +49,14 @@ const nodes = {
   feedbackForm: document.querySelector("#feedbackForm"),
   closeFeedback: document.querySelector("#closeFeedback"),
   seedButton: document.querySelector("#seedButton"),
+  analyzeTextBtn: document.querySelector("#analyzeTextBtn"),
+  analyzeImageBtn: document.querySelector("#analyzeImageBtn"),
+  aiResult: document.querySelector("#aiResult"),
+  aiCalories: document.querySelector("#aiCalories"),
+  aiNutrients: document.querySelector("#aiNutrients"),
+  aiFeedbackText: document.querySelector("#aiFeedbackText"),
+  closeAiResult: document.querySelector("#closeAiResult"),
+  applyAiFeedback: document.querySelector("#applyAiFeedback"),
 };
 
 document.querySelectorAll("[data-view]").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
@@ -196,6 +204,22 @@ document.querySelectorAll("[data-feedback-tag]").forEach((button) => {
     textarea.value = textarea.value ? `${textarea.value}, ${button.dataset.feedbackTag}` : button.dataset.feedbackTag;
     textarea.focus();
   });
+});
+
+nodes.analyzeTextBtn.addEventListener("click", handleTextAnalysis);
+nodes.analyzeImageBtn.addEventListener("click", handleImageAnalysis);
+nodes.closeAiResult.addEventListener("click", () => { nodes.aiResult.hidden = true; });
+nodes.applyAiFeedback.addEventListener("click", () => {
+  const text = nodes.aiFeedbackText.textContent.trim();
+  if (!text) return;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = nodes.applyAiFeedback;
+      const prev = btn.textContent;
+      btn.textContent = "복사됨!";
+      setTimeout(() => { btn.textContent = prev; }, 1600);
+    });
+  }
 });
 
 nodes.seedButton.addEventListener("click", async () => {
@@ -558,6 +582,81 @@ function seedData() {
     { id: crypto.randomUUID(), memberId: first, date: getToday(), mealType: "점심", description: "현미밥, 닭가슴살, 샐러드, 아메리카노", water: "1.2", diningOut: false, alcohol: false, photo: "", feedback: "", createdAt: new Date().toISOString() },
     { id: crypto.randomUUID(), memberId: second, date: getToday(), mealType: "간식", description: "바나나, 프로틴 쉐이크", water: "1.6", diningOut: false, alcohol: false, photo: "", feedback: "운동 후 보충 좋습니다. 저녁에는 밥 양을 조금 더 챙겨주세요.", createdAt: new Date().toISOString() },
   ];
+}
+
+async function handleTextAnalysis() {
+  const description = nodes.mealForm.elements.description.value.trim();
+  if (!description) {
+    alert("식단 메모를 먼저 입력해 주세요.");
+    return;
+  }
+  const memberId = nodes.mealForm.elements.memberId.value;
+  const member = getMember(memberId);
+  const memberInfo = memberId ? { goal: member.goal, currentWeight: member.weight, targetWeight: member.targetWeight } : null;
+
+  setAiLoading(nodes.analyzeTextBtn, true);
+  try {
+    const result = await window.FitPlateAI.analyzeMealText(description, memberInfo);
+    showAiResult(result);
+  } catch (error) {
+    showAiError(error.message);
+  } finally {
+    setAiLoading(nodes.analyzeTextBtn, false, "✨ AI 분석");
+  }
+}
+
+async function handleImageAnalysis() {
+  const file = document.querySelector("#mealPhotoInput")?.files?.[0];
+  if (!file) {
+    alert("사진을 먼저 선택해 주세요.");
+    return;
+  }
+  const memberId = nodes.mealForm.elements.memberId.value;
+  const member = getMember(memberId);
+  const memberInfo = memberId ? { goal: member.goal, currentWeight: member.weight, targetWeight: member.targetWeight } : null;
+
+  setAiLoading(nodes.analyzeImageBtn, true);
+  try {
+    const result = await window.FitPlateAI.analyzeMealImage(file, memberInfo);
+    showAiResult(result);
+  } catch (error) {
+    showAiError(error.message);
+  } finally {
+    setAiLoading(nodes.analyzeImageBtn, false, "📷 사진 AI 분석");
+  }
+}
+
+function showAiResult(result) {
+  const { calories, nutrients = {}, feedback } = result;
+  nodes.aiCalories.textContent = calories ?? "--";
+
+  const labels = { carbs: "탄수화물", protein: "단백질", fat: "지방", fiber: "식이섬유" };
+  nodes.aiNutrients.innerHTML = Object.entries(labels)
+    .filter(([key]) => nutrients[key] != null)
+    .map(([key, label]) => `<div class="nutrient-chip"><span>${label}</span><strong>${nutrients[key]}g</strong></div>`)
+    .join("");
+
+  nodes.aiFeedbackText.textContent = feedback || "";
+  nodes.aiResult.hidden = false;
+  nodes.aiResult.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function showAiError(message) {
+  nodes.aiCalories.textContent = "--";
+  nodes.aiNutrients.innerHTML = "";
+  nodes.aiFeedbackText.textContent = `분석 실패: ${message}`;
+  nodes.aiResult.hidden = false;
+}
+
+function setAiLoading(button, loading, label) {
+  if (loading) {
+    button.dataset.origLabel = button.textContent;
+    button.textContent = "분석 중...";
+    button.disabled = true;
+  } else {
+    button.textContent = label || button.dataset.origLabel || button.textContent;
+    button.disabled = false;
+  }
 }
 
 init();

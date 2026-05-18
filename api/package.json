@@ -1,0 +1,9 @@
+{
+  "name": "fit-plate-coach-api",
+  "version": "1.0.0",
+  "description": "Azure Functions for Fit Plate Coach - AI 식단 분석",
+  "scripts": {
+    "start": "func start"
+  },
+  "dependencies": {}
+}
