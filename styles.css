@@ -793,6 +793,66 @@ dialog::backdrop {
   white-space: pre-wrap;
 }
 
+/* ── KakaoTalk preview & copy ───────────── */
+.kakao-preview {
+  padding: 14px 16px;
+  background: #fffde0;
+  border: 1px solid #f5e47a;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  line-height: 1.85;
+  white-space: pre-wrap;
+  color: var(--ink);
+  word-break: keep-all;
+}
+
+.kakao-copy-btn {
+  width: 100%;
+  min-height: 48px;
+  border-radius: var(--radius);
+  border: none;
+  background: #fee500;
+  color: #111;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.kakao-copy-btn:hover {
+  background: #f5d800;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(254,229,0,0.5);
+}
+
+.kakao-copy-btn:active { transform: translateY(0); box-shadow: none; }
+
+/* ── Toast notification ──────────────────── */
+.toast {
+  position: fixed;
+  bottom: 76px;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: #111827;
+  color: white;
+  padding: 11px 20px;
+  border-radius: 24px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 500;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  white-space: nowrap;
+  max-width: calc(min(600px, 100vw) - 40px);
+  text-align: center;
+}
+
+.toast.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 /* ── Desktop phone-frame ─────────────────── */
 @media (min-width: 640px) {
   body { background: #e9ebee; }

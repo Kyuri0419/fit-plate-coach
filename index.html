@@ -173,8 +173,8 @@
                     <span class="muted">종합 점수</span>
                     <span class="ai-score" id="aiScore"></span>
                   </div>
-                  <p class="ai-feedback-text" id="aiFeedbackText"></p>
-                  <button class="ghost-action" type="button" id="applyAiFeedback">피드백에 복사</button>
+                  <div class="kakao-preview" id="kakaoPreview"></div>
+                  <button class="kakao-copy-btn" type="button" id="copyKakaoBtn">📋 카톡 메시지 복사</button>
                 </div>
                 <button class="primary-action full" type="submit">식단 저장</button>
               </form>
@@ -235,6 +235,7 @@
       </form>
     </dialog>
 
+    <div id="toast" class="toast"></div>
     <script src="./ai-analyzer.js"></script>
     <script src="./supabase-config.js"></script>
     <script src="./app.js"></script>

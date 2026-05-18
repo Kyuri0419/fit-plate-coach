@@ -64,11 +64,17 @@ module.exports = async function (context, req) {
   "totalCarbs": 총탄수화물g,
   "totalFat": 총지방g,
   "summary": "한 줄 요약",
-  "feedback": "트레이너 피드백 (3-4문장)",
   "score": 1-10점,
-  "confidence": "high/medium/low (사진으로 식별한 정확도)"
+  "confidence": "high/medium/low (사진으로 식별한 정확도)",
+  "kakaoMessage": "카카오톡 전송용 피드백 메시지"
 }
 
+kakaoMessage 작성 규칙:
+- 정중한 존댓말, 친근하고 따뜻한 트레이너 말투 (반말 절대 X)
+- 7~8줄 분량, 마크다운·번호목록 없이 자연스러운 문장
+- 구조: ①인사 한 줄 ②잘한 점 1가지 ③영양 분석(칼로리·영양소 자연스럽게) ④개선 제안 1~2가지(구체적 음식명 포함) ⑤격려 한 줄
+- 이모지 2~3개만, 줄바꿈은 \\n 사용
+- 예시: "오늘도 식단 잘 챙기셨네요! 🙌\\n\\n현미밥과 닭가슴살 조합은 정말 좋아요.\\n이번 식단은 약 550kcal에 단백질 38g으로 균형이 잘 잡혀 있어요.\\n\\n채소 반찬을 하나 더 추가하시면 식이섬유까지 완벽해질 것 같아요.\\n앞으로도 이렇게 꾸준히 해주세요. 화이팅이에요! 💪"
 칼로리/영양소는 일반적인 1인분 기준 추정치입니다.`;
 
   const url = `${endpoint}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`;

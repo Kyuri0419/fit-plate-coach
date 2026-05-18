@@ -19,6 +19,7 @@ let state = loadLocalState();
 let activePlanFilter = "전체";
 let currentUser = null;
 let authAction = "signin";
+let currentKakaoMessage = "";
 
 const nodes = {
   appContent: document.querySelector("#appContent"),
@@ -56,9 +57,10 @@ const nodes = {
   aiNutrients: document.querySelector("#aiNutrients"),
   aiScoreRow: document.querySelector("#aiScoreRow"),
   aiScore: document.querySelector("#aiScore"),
-  aiFeedbackText: document.querySelector("#aiFeedbackText"),
+  kakaoPreview: document.querySelector("#kakaoPreview"),
   closeAiResult: document.querySelector("#closeAiResult"),
-  applyAiFeedback: document.querySelector("#applyAiFeedback"),
+  copyKakaoBtn: document.querySelector("#copyKakaoBtn"),
+  toast: document.querySelector("#toast"),
 };
 
 document.querySelectorAll("[data-view]").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
@@ -211,17 +213,11 @@ document.querySelectorAll("[data-feedback-tag]").forEach((button) => {
 nodes.analyzeTextBtn.addEventListener("click", handleTextAnalysis);
 nodes.analyzeImageBtn.addEventListener("click", handleImageAnalysis);
 nodes.closeAiResult.addEventListener("click", () => { nodes.aiResult.hidden = true; });
-nodes.applyAiFeedback.addEventListener("click", () => {
-  const text = nodes.aiFeedbackText.textContent.trim();
-  if (!text) return;
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => {
-      const btn = nodes.applyAiFeedback;
-      const prev = btn.textContent;
-      btn.textContent = "복사됨!";
-      setTimeout(() => { btn.textContent = prev; }, 1600);
-    });
-  }
+nodes.copyKakaoBtn.addEventListener("click", () => {
+  if (!currentKakaoMessage) return;
+  navigator.clipboard.writeText(currentKakaoMessage)
+    .then(() => showToast("카톡 메시지가 복사됐어요! 카톡에 붙여넣으세요 💬"))
+    .catch(() => showToast("복사에 실패했어요. 직접 선택해서 복사해주세요."));
 });
 
 nodes.seedButton.addEventListener("click", async () => {
@@ -629,7 +625,7 @@ async function handleImageAnalysis() {
 }
 
 function showAiResult(result) {
-  const { totalCalories, totalProtein, totalCarbs, totalFat, feedback, score } = result;
+  const { totalCalories, totalProtein, totalCarbs, totalFat, kakaoMessage, score } = result;
 
   nodes.aiCalories.textContent = totalCalories ?? "--";
 
@@ -659,7 +655,10 @@ function showAiResult(result) {
     nodes.aiScoreRow.hidden = true;
   }
 
-  nodes.aiFeedbackText.textContent = feedback || "";
+  currentKakaoMessage = kakaoMessage || "";
+  nodes.kakaoPreview.textContent = currentKakaoMessage;
+  nodes.kakaoPreview.hidden = !currentKakaoMessage;
+  nodes.copyKakaoBtn.hidden = !currentKakaoMessage;
   nodes.aiResult.hidden = false;
   nodes.aiResult.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
@@ -668,8 +667,18 @@ function showAiError(message) {
   nodes.aiCalories.textContent = "--";
   nodes.aiNutrients.innerHTML = "";
   nodes.aiScoreRow.hidden = true;
-  nodes.aiFeedbackText.textContent = `분석 실패: ${message}`;
+  currentKakaoMessage = "";
+  nodes.kakaoPreview.textContent = `분석 실패: ${message}`;
+  nodes.kakaoPreview.hidden = false;
+  nodes.copyKakaoBtn.hidden = true;
   nodes.aiResult.hidden = false;
+}
+
+function showToast(message) {
+  nodes.toast.textContent = message;
+  nodes.toast.classList.add("is-visible");
+  clearTimeout(nodes.toast._tid);
+  nodes.toast._tid = setTimeout(() => nodes.toast.classList.remove("is-visible"), 2000);
 }
 
 function setAiLoading(button, loading, label) {
