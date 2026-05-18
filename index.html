@@ -8,29 +8,17 @@
   </head>
   <body>
     <div class="app-shell">
-      <aside class="sidebar" aria-label="앱 내비게이션">
+
+      <header class="app-bar">
         <div class="brand">
           <span class="brand-mark" aria-hidden="true">FP</span>
-          <div>
-            <strong>Fit Plate</strong>
-            <span>Coach</span>
-          </div>
+          <strong>Fit Plate Coach</strong>
         </div>
-
-        <nav class="nav-tabs" aria-label="주요 화면">
-          <button class="nav-tab is-active" type="button" data-view="dashboard" aria-pressed="true"><span aria-hidden="true">▦</span>대시보드</button>
-          <button class="nav-tab" type="button" data-view="members" aria-pressed="false"><span aria-hidden="true">◉</span>회원</button>
-          <button class="nav-tab" type="button" data-view="meal" aria-pressed="false"><span aria-hidden="true">＋</span>식단 기록</button>
-          <button class="nav-tab" type="button" data-view="plans" aria-pressed="false"><span aria-hidden="true">▤</span>식단 플랜</button>
-        </nav>
-
-        <div class="storage-note">
-          <strong id="storageMode">로컬 MVP</strong>
-          <span id="storageText">Supabase 설정 전에는 이 브라우저에만 저장됩니다.</span>
-        </div>
-      </aside>
+        <span id="storageMode" class="storage-badge">로컬 MVP</span>
+      </header>
 
       <main class="main">
+        <span id="storageText" hidden></span>
         <section class="auth-panel" id="authPanel" hidden>
           <div>
             <p class="eyebrow">클라우드 공유 모드</p>
@@ -73,8 +61,8 @@
               <label>사진 <input name="photo" type="file" accept="image/*" /></label>
             </div>
             <div class="check-row">
-              <label><input name="diningOut" type="checkbox" /> 외식</label>
-              <label><input name="alcohol" type="checkbox" /> 음주</label>
+              <label class="toggle-label"><input name="diningOut" type="checkbox" /> 외식</label>
+              <label class="toggle-label"><input name="alcohol" type="checkbox" /> 음주</label>
             </div>
             <button class="primary-action full" type="submit">트레이너에게 보내기</button>
             <p class="muted" id="portalMessage"></p>
@@ -83,14 +71,11 @@
 
         <div id="appContent">
           <header class="topbar">
-            <div>
-              <p class="eyebrow">트레이너 식단 관리</p>
-              <h1 id="viewTitle">오늘의 관리</h1>
-            </div>
+            <h1 id="viewTitle">오늘의 관리</h1>
             <div class="top-actions">
               <button class="icon-button" type="button" id="seedButton" aria-label="샘플 데이터 채우기" title="샘플 데이터 채우기">◎</button>
               <button class="ghost-action" type="button" id="signOutButton" hidden>로그아웃</button>
-              <button class="primary-action" type="button" data-view-jump="meal">식단 추가</button>
+              <button class="primary-action" type="button" data-view-jump="meal">+ 추가</button>
             </div>
           </header>
 
@@ -170,8 +155,8 @@
                 </div>
                 <button class="ai-btn" type="button" id="analyzeImageBtn">📷 사진 AI 분석</button>
                 <div class="check-row">
-                  <label><input name="diningOut" type="checkbox" /> 외식</label>
-                  <label><input name="alcohol" type="checkbox" /> 음주</label>
+                  <label class="toggle-label"><input name="diningOut" type="checkbox" /> 외식</label>
+                  <label class="toggle-label"><input name="alcohol" type="checkbox" /> 음주</label>
                 </div>
                 <div id="aiResult" class="ai-result" hidden>
                   <div class="ai-result-header">
@@ -214,6 +199,22 @@
           </section>
         </div>
       </main>
+
+      <nav class="bottom-nav" aria-label="주요 화면">
+        <button class="nav-tab is-active" type="button" data-view="dashboard" aria-pressed="true">
+          <span class="nav-icon" aria-hidden="true">⊞</span><span>대시보드</span>
+        </button>
+        <button class="nav-tab" type="button" data-view="members" aria-pressed="false">
+          <span class="nav-icon" aria-hidden="true">◎</span><span>회원</span>
+        </button>
+        <button class="nav-tab" type="button" data-view="meal" aria-pressed="false">
+          <span class="nav-icon" aria-hidden="true">✚</span><span>식단</span>
+        </button>
+        <button class="nav-tab" type="button" data-view="plans" aria-pressed="false">
+          <span class="nav-icon" aria-hidden="true">☰</span><span>플랜</span>
+        </button>
+      </nav>
+
     </div>
 
     <dialog id="feedbackDialog">

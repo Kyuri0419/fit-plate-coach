@@ -633,14 +633,22 @@ function showAiResult(result) {
 
   nodes.aiCalories.textContent = totalCalories ?? "--";
 
+  const refMax = { protein: 100, carbs: 300, fat: 80 };
+  const barColor = { protein: "#10b981", carbs: "#6366f1", fat: "#f59e0b" };
   const nutrients = [
-    { label: "단백질", value: totalProtein },
-    { label: "탄수화물", value: totalCarbs },
-    { label: "지방", value: totalFat },
+    { key: "protein", label: "단백질",  value: totalProtein },
+    { key: "carbs",   label: "탄수화물", value: totalCarbs },
+    { key: "fat",     label: "지방",    value: totalFat },
   ];
   nodes.aiNutrients.innerHTML = nutrients
     .filter(({ value }) => value != null)
-    .map(({ label, value }) => `<div class="nutrient-chip"><span>${label}</span><strong>${value}g</strong></div>`)
+    .map(({ key, label, value }) => {
+      const pct = Math.min(100, Math.round((value / refMax[key]) * 100));
+      return `<div class="nutrient-bar">
+        <div class="nutrient-bar-top"><span>${label}</span><strong>${value}g</strong></div>
+        <div class="nutrient-track"><div class="nutrient-fill" style="width:${pct}%;background:${barColor[key]}"></div></div>
+      </div>`;
+    })
     .join("");
 
   if (score != null) {
